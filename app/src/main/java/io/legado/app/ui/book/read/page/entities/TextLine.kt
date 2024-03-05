@@ -20,7 +20,7 @@ data class TextLine(
     var lineBottom: Float = 0f,//在页中布局的行底部位置
     var indentWidth: Float = 0f,//首行缩进
     var paragraphNum: Int = 0,//段落号
-    var chapterPosition: Int = 0,
+    var chapterPosition: Int = 0,//在章节中的位置
     var pagePosition: Int = 0,
     val isTitle: Boolean = false,
     var isParagraphEnd: Boolean = false,//是否段落结束

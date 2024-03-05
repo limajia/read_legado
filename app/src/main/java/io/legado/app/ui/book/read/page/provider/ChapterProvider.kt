@@ -483,8 +483,8 @@ object ChapterProvider {
                 else -> lastLine.paragraphNum
             }
             textLine.paragraphNum = paragraphNum
-            textLine.chapterPosition =
-                (textPages.getOrNull(textPages.lastIndex - 1)?.lines?.lastOrNull()?.run {
+            //找到倒数第二page的最后一行
+            textLine.chapterPosition = (textPages.getOrNull(textPages.lastIndex - 1)?.lines?.lastOrNull()?.run {
                     chapterPosition + charSize + if (isParagraphEnd) 1 else 0
                 } ?: 0) + sbLength
             textLine.pagePosition = sbLength
