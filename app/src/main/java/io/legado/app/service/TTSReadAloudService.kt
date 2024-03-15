@@ -71,6 +71,10 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
         }
     }
 
+    /**
+     * 这里是用来读音频的，
+     * 找到这一章的起始位置，然后是一段的一段添加到tts阅读队列中
+     */
     @Synchronized
     override fun play() {
         if (!ttsInitFinish) return
@@ -166,13 +170,13 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
      */
     private inner class TTSUtteranceListener : UtteranceProgressListener() {
 
-        override fun onStart(s: String) {
+        override fun onStart(s: String) {//句子
             textChapter?.let {
-                if (readAloudNumber + 1 > it.getReadLength(pageIndex + 1)) {
+                if (readAloudNumber + 1 > it.getReadLength(pageIndex + 1)) { //这里是判断已经到了下一页的最后一个数字，然后跳转到下一页
                     pageIndex++
                     ReadBook.moveToNextPage()
                 }
-                upTtsProgress(readAloudNumber + 1)
+                upTtsProgress(readAloudNumber + 1)//播放中更新进度
             }
         }
 
@@ -189,7 +193,7 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
             } while (contentList[nowSpeak].matches(AppPattern.notReadAloudRegex))
         }
 
-        override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
+        override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {//读取特殊的区域的文本时候，回调
             super.onRangeStart(utteranceId, start, end, frame)
             textChapter?.let {
                 if (readAloudNumber + start > it.getReadLength(pageIndex + 1)) {

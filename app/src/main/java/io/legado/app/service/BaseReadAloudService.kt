@@ -76,11 +76,20 @@ abstract class BaseReadAloudService : BaseService(),
     private val mediaSessionCompat: MediaSessionCompat by lazy {
         MediaSessionCompat(this, "readAloud")
     }
+
+    /**
+     * 这就是一章的内容
+     */
     internal var contentList = emptyList<String>()
+
+    /**
+     * 当前朗读的段落
+     */
     internal var nowSpeak: Int = 0
-    internal var readAloudNumber: Int = 0
+    var paragraphStartPos = 0//段落的文本的起始位置
+    internal var readAloudNumber: Int = 0//当前朗读的位置，已经读到的位置
     internal var textChapter: TextChapter? = null
-    internal var pageIndex = 0
+    internal var pageIndex = 0//当前章节的页码
     private var needResumeOnAudioFocusGain = false
     private var dsJob: Job? = null
     private var cover: Bitmap =
@@ -88,7 +97,8 @@ abstract class BaseReadAloudService : BaseService(),
     var pageChanged = false
     private var ttsProgress = 0
     private var toLast = false
-    var paragraphStartPos = 0
+
+
     private var readAloudByPage = false
 
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -155,20 +165,20 @@ abstract class BaseReadAloudService : BaseService(),
                 intent.getIntExtra("startPos", 0)
             )
 
-            IntentAction.pause -> pauseReadAloud()
-            IntentAction.resume -> resumeReadAloud()
-            IntentAction.upTtsSpeechRate -> upSpeechRate(true)
-            IntentAction.upTtsProgress -> upTtsProgress(ttsProgress)
-            IntentAction.prevParagraph -> prevP()
-            IntentAction.nextParagraph -> nextP()
-            IntentAction.addTimer -> addTimer()
-            IntentAction.setTimer -> setTimer(intent.getIntExtra("minute", 0))
-            IntentAction.stop -> stopSelf()
+            IntentAction.pause -> pauseReadAloud() // 暂停
+            IntentAction.resume -> resumeReadAloud()// 恢复
+            IntentAction.upTtsSpeechRate -> upSpeechRate(true)// 更新语速
+            IntentAction.upTtsProgress -> upTtsProgress(ttsProgress)// 更新进度
+            IntentAction.prevParagraph -> prevP()// 上一段
+            IntentAction.nextParagraph -> nextP()// 下一段
+            IntentAction.addTimer -> addTimer()// 增加定时
+            IntentAction.setTimer -> setTimer(intent.getIntExtra("minute", 0))// 设置定时
+            IntentAction.stop -> stopSelf()// 停止
         }
         return super.onStartCommand(intent, flags, startId)
     }
 
-    private fun newReadAloud(play: Boolean, pageIndex: Int, startPos: Int) {
+    private fun newReadAloud(play: Boolean, pageIndex: Int, startPos: Int) {//startPos貌似是当前页的偏移
         execute(executeContext = IO) {
             this@BaseReadAloudService.pageIndex = pageIndex
             textChapter = ReadBook.curTextChapter
@@ -246,7 +256,7 @@ abstract class BaseReadAloudService : BaseService(),
 
     abstract fun upSpeechRate(reset: Boolean = false)
 
-    fun upTtsProgress(progress: Int) {
+    fun upTtsProgress(progress: Int) {//progress为chapterStart。文字在章节中的位置
         ttsProgress = progress
         postEvent(EventBus.TTS_PROGRESS, progress)
     }
@@ -488,6 +498,7 @@ abstract class BaseReadAloudService : BaseService(),
             getString(R.string.set_timer),
             aloudServicePendingIntent(IntentAction.addTimer)
         )
+        //最多显示五个action按钮
         builder.setStyle(
             androidx.media.app.NotificationCompat.MediaStyle()
                 .setShowActionsInCompactView(0, 1, 2)

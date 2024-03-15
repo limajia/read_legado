@@ -25,7 +25,7 @@ data class TextPage(
     var pageSize: Int = 0,
     var chapterSize: Int = 0,
     var chapterIndex: Int = 0,
-    var height: Float = 0f,
+    var height: Float = 0f,//页面高度,通过ChapterProvider中Layout布完局后获取
     var leftLineSize: Int = 0
 ) {
 

@@ -63,7 +63,7 @@ data class TextChapter(
             return paragraphs
         }
 
-    val pageParagraphsInternal: List<TextParagraph>
+    val pageParagraphsInternal: List<TextParagraph> // 按页分段. 用于分页, num从1开始
         get() = pages.map {
             it.paragraphs
         }.flatten().also {
@@ -82,7 +82,7 @@ data class TextChapter(
 
     /**
      * @param pageIndex 页数
-     * @return 已读长度
+     * @return 已读长度，不包含当前的pageIndex
      */
     fun getReadLength(pageIndex: Int): Int {
         var length = 0

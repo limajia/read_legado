@@ -25,12 +25,12 @@ object ReadAloud {
 
     private fun getReadAloudClass(): Class<*> {
         val ttsEngine = ttsEngine
-        if (ttsEngine.isNullOrBlank()) {
+        if (ttsEngine.isNullOrBlank()) {// 未设置朗读引擎,本地的朗读引擎
             return TTSReadAloudService::class.java
         }
         if (StringUtils.isNumeric(ttsEngine)) {
             httpTTS = appDb.httpTTSDao.get(ttsEngine.toLong())
-            if (httpTTS != null) {
+            if (httpTTS != null) {// 使用其他的朗读引擎
                 return HttpReadAloudService::class.java
             }
         }
@@ -41,6 +41,7 @@ object ReadAloud {
         stop(appCtx)
         aloudClass = getReadAloudClass()
     }
+
 
     fun play(
         context: Context,

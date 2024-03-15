@@ -118,12 +118,13 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
      * 绘制页面
      */
     private fun drawPage(canvas: Canvas) {
-        var relativeOffset = relativeOffset(0)
+        var relativeOffset = relativeOffset(0)//relativeOffset是用来处理上下滚动的偏移量的
+        //绘制当前页面的TextPage内容
         textPage.lines.forEach { textLine ->
             drawLine(canvas, textPage, textLine, relativeOffset)
         }
         if (!callBack.isScroll) return
-        //滚动翻页
+        //滚动翻页的绘制过程，会有多个TextPage的text拼接的过程---------------start-------------------------- relativeOffset就是用来拼接上下page的偏移量
         if (!pageFactory.hasNext()) return
         val textPage1 = relativePage(1)
         relativeOffset = relativeOffset(1)
@@ -138,6 +139,7 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
                 drawLine(canvas, textPage2, textLine, relativeOffset)
             }
         }
+        //滚动翻页的绘制过程，会有多个TextPage的text拼接的过程---------------end--------------------------
     }
 
     /**

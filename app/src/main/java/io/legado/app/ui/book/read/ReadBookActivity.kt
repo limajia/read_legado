@@ -1168,7 +1168,7 @@ class ReadBookActivity : BaseReadBookActivity(),
     override fun onClickReadAloud() {
         autoPageStop()
         when {
-            !BaseReadAloudService.isRun -> {
+            !BaseReadAloudService.isRun -> {//没有运行
                 ReadAloud.upReadAloudClass()
                 val scrollPageAnim = ReadBook.pageAnim() == 3
                 if (scrollPageAnim) {
@@ -1179,7 +1179,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                 }
             }
 
-            BaseReadAloudService.pause -> {
+            BaseReadAloudService.pause -> {//暂停中
                 val scrollPageAnim = ReadBook.pageAnim() == 3
                 if (scrollPageAnim && pageChanged) {
                     pageChanged = false
@@ -1458,9 +1458,10 @@ class ReadBookActivity : BaseReadBookActivity(),
                 if (BaseReadAloudService.isPlay()) {
                     ReadBook.curTextChapter?.let { textChapter ->
                         val pageIndex = ReadBook.durPageIndex
+                        //
+                        //textChapter.getReadLength(pageIndex)//到当前页面最后一个字的位置
                         val aloudSpanStart = chapterStart - textChapter.getReadLength(pageIndex)
-                        textChapter.getPage(pageIndex)
-                            ?.upPageAloudSpan(aloudSpanStart)
+                        textChapter.getPage(pageIndex)?.upPageAloudSpan(aloudSpanStart)
                         upContent()
                     }
                 }

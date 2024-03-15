@@ -41,7 +41,8 @@ import java.net.SocketTimeoutException
 import kotlin.coroutines.coroutineContext
 
 /**
- * 在线朗读
+ * 在线朗读，
+ * 流程为：1.下载mp3文件到本地，2.exoplayer进行播放
  */
 class HttpReadAloudService : BaseReadAloudService(),
     Player.Listener {
@@ -57,7 +58,7 @@ class HttpReadAloudService : BaseReadAloudService(),
     private var playIndexJob: Job? = null
     private var downloadErrorNo: Int = 0
     private var playErrorNo = 0
-    private val downloadTaskActiveLock = Mutex()
+    private val downloadTaskActiveLock = Mutex()//加一个互斥锁
 
     override fun onCreate() {
         super.onCreate()
@@ -310,8 +311,8 @@ class HttpReadAloudService : BaseReadAloudService(),
             }
             val sleep = exoPlayer.duration / speakTextLength
             val start = speakTextLength * exoPlayer.currentPosition / exoPlayer.duration
-            for (i in start..contentList[nowSpeak].length) {
-                if (readAloudNumber + i > textChapter.getReadLength(pageIndex + 1)) {
+            for (i in start..contentList[nowSpeak].length) {//根据时间，计算正在听的是不是在时间段内
+                if (readAloudNumber + i > textChapter.getReadLength(pageIndex + 1)) {//再加一个字符，超了当前页的字符位置
                     pageIndex++
                     if (pageIndex < textChapter.pageSize) {
                         ReadBook.moveToNextPage()

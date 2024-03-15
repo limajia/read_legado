@@ -138,7 +138,7 @@ object ChapterProvider {
         bookContent: BookContent,//章节分段内容
         chapterSize: Int,//章节总数
     ): TextChapter {
-        val contents = bookContent.textList //这里是拆分完的一章内容，按照符号拆分的一个集合
+        val contents: List<String> = bookContent.textList //这里是拆分完的一章内容，按照符号拆分的一个集合
         val textPages = arrayListOf<TextPage>()
         val stringBuilder = StringBuilder()
         var absStartX = paddingLeft
@@ -152,7 +152,7 @@ object ChapterProvider {
                     book,
                     absStartX,//x轴起始位置
                     durY,//y轴起始位置
-                    if (AppConfig.enableReview) text + reviewChar else text,//是否有段评后的处理文本
+                    if (AppConfig.enableReview) text + reviewChar else text,//是否有段评后的处理文本，这里是一段文本
                     textPages,//目前这里只有一页
                     stringBuilder,//空的stringBuilder
                     titlePaint,//标题画笔
@@ -169,10 +169,10 @@ object ChapterProvider {
             }
             durY += titleBottomSpacing//添加标题底部间距
         }
-        contents.forEach { content ->
+        contents.forEach { dunluoContent ->
             if (book.getImageStyle().equals(Book.imgStyleText, true)) {
                 //图片样式为文字嵌入类型
-                var text = content.replace(srcReplaceChar, "▣")
+                var text = dunluoContent.replace(srcReplaceChar, "▣")
                 val srcList = LinkedList<String>()
                 val sb = StringBuffer()
                 val matcher = AppPattern.imgPattern.matcher(text)
@@ -202,9 +202,9 @@ object ChapterProvider {
             } else {
                 var start = 0//这一行的起始位置的正文文本
                 //正则匹配图片-start
-                val matcher = AppPattern.imgPattern.matcher(content)
+                val matcher = AppPattern.imgPattern.matcher(dunluoContent)
                 while (matcher.find()) {
-                    val text = content.substring(start, matcher.start())
+                    val text = dunluoContent.substring(start, matcher.start())
                     if (text.isNotBlank()) {
                         setTypeText(
                             book,
@@ -228,8 +228,8 @@ object ChapterProvider {
                     start = matcher.end()
                 }
                 //正则匹配图片-end
-                if (start < content.length) {//正文的一个段落
-                    val text = content.substring(start, content.length)//整个段落一起布局
+                if (start < dunluoContent.length) {//正文的一个段落
+                    val text = dunluoContent.substring(start, dunluoContent.length)//整个段落一起布局
                     if (text.isNotBlank()) {
                         setTypeText(
                             book, absStartX, durY,
@@ -241,7 +241,7 @@ object ChapterProvider {
                             contentPaintFontMetrics
                         ).let {
                             absStartX = it.first
-                            durY = it.second
+                            durY = it.second //用于下一段的排版
                         }
                     }
                 }
@@ -340,22 +340,41 @@ object ChapterProvider {
     }
 
     /**
+     *
      * 排版文字
+     * This function is responsible for setting the text in a chapter of a book.
+     * It takes into account various factors such as the position of the text, whether the text is a title or not, and whether there is any content in the chapter.
+     * It also handles the layout of the text, ensuring that it fits within the visible area of the page.
+     *
+     * @param book The book information.
+     * @param x The x-axis starting position.
+     * @param y The y-axis starting position.
+     * @param text The text to be set.
+     * @param textPages The collection of pages.
+     * @param stringBuilder The StringBuilder used for appending text.
+     * @param textPaint The Paint used for the text.
+     * @param textHeight The height of the text.
+     * @param fontMetrics The font metrics.
+     * @param isTitle A boolean indicating whether the text is a title.
+     * @param emptyContent A boolean indicating whether there is no content in the chapter.
+     * @param isVolumeTitle A boolean indicating whether the text is a volume title.
+     * @param srcList A list of sources for images.
+     * @return A Pair of Int and Float representing the x-axis starting position and the y-axis starting position for the next line of text.
      */
     private suspend fun setTypeText(
-        book: Book,
-        x: Int,
-        y: Float,
-        text: String,
-        textPages: ArrayList<TextPage>,
-        stringBuilder: StringBuilder,
-        textPaint: TextPaint,
-        textHeight: Float,
-        fontMetrics: FontMetrics,
-        isTitle: Boolean = false,
-        emptyContent: Boolean = false,
-        isVolumeTitle: Boolean = false,
-        srcList: LinkedList<String>? = null
+        book: Book,//书籍信息
+        x: Int,//x轴起始位置
+        y: Float,//y轴起始位置
+        text: String,//一段文本
+        textPages: ArrayList<TextPage>,//页面集合
+        stringBuilder: StringBuilder,//用于拼接文本
+        textPaint: TextPaint,//画笔
+        textHeight: Float,//文字高度
+        fontMetrics: FontMetrics,//字体度量
+        isTitle: Boolean = false,//是否是标题
+        emptyContent: Boolean = false,//是否是没有正文 没有正文的所有段落
+        isVolumeTitle: Boolean = false,//是否是卷标题
+        srcList: LinkedList<String>? = null//图片列表
     ): Pair<Int, Float> {
         var absStartX = x
         val widthsArray = FloatArray(text.length)
@@ -396,12 +415,12 @@ object ChapterProvider {
         for (lineIndex in 0 until layout.lineCount) {
             val textLine = TextLine(isTitle = isTitle)
             if (durY + textHeight > visibleHeight) {
-                val textPage = textPages.last()
+                val textPage = textPages.last()//找到最后一页
                 if (doublePage && absStartX < viewWidth / 2) {
                     textPage.leftLineSize = textPage.lineSize
                     absStartX = viewWidth / 2 + paddingLeft
                 } else {
-                    //当前页面结束,设置各种值
+                    //当前页面结束,设置各种值，然后新建一个页面
                     if (textPage.leftLineSize == 0) {
                         textPage.leftLineSize = textPage.lineSize
                     }
@@ -414,8 +433,8 @@ object ChapterProvider {
                 }
                 durY = 0f
             }
-            val lineStart = layout.getLineStart(lineIndex)
-            val lineEnd = layout.getLineEnd(lineIndex)
+            val lineStart = layout.getLineStart(lineIndex)//返回字符序列中的指定行的起始偏移量，即第一个字符的索引
+            val lineEnd = layout.getLineEnd(lineIndex)//返回字符序列中的指定行的结束偏移量，即最后一个字符的索引
             val words = text.substring(lineStart, lineEnd)
             val textWidths = widthsList.subList(lineStart, lineEnd)
             val desiredWidth = textWidths.sum()
@@ -484,7 +503,8 @@ object ChapterProvider {
             }
             textLine.paragraphNum = paragraphNum
             //找到倒数第二page的最后一行
-            textLine.chapterPosition = (textPages.getOrNull(textPages.lastIndex - 1)?.lines?.lastOrNull()?.run {
+            textLine.chapterPosition =
+                (textPages.getOrNull(textPages.lastIndex - 1)?.lines?.lastOrNull()?.run {
                     chapterPosition + charSize + if (isParagraphEnd) 1 else 0
                 } ?: 0) + sbLength
             textLine.pagePosition = sbLength
